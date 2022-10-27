@@ -16,20 +16,5 @@ body {
 }
 
 canvas {
-    transition: transform 0.01s;
     max-width: 100%;
-}
-
-.bass {
-    transform: scale(1.01);
-}
-
-#play-btn {
-    display: none;
-    color: #fff;
-    text-transform: uppercase;
-    font-family: 'Gill Sans';
-    letter-spacing: 2px;
-    font-size: 1.4em;
-    opacity: 0.8;
 }

@@ -1,7 +1,5 @@
 export const width = window.innerWidth
 export const height = Math.min(window.innerWidth * 0.6, window.innerHeight)
-// export const width = 1400
-// export const height = 800
 
 export const margin = {
   right: width * 0.12,

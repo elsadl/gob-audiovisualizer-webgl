@@ -18,16 +18,14 @@ let beatValue = 0
 
 let classActive = false
 
-let imgMask
 let grid
-let circles
 let offset = 0
 
 const sketch = (sketch) => {
   sketch.preload = () => {
     // on charge le son
     sketch.soundFormats("mp3", "ogg")
-    sound = sketch.loadSound("sounds/pola.mp3")
+    sound = sketch.loadSound("sounds/polahq.mp3")
 
     // on charge les shaders
     for (const element of shaders) {
@@ -37,9 +35,6 @@ const sketch = (sketch) => {
         () => (element.loaded = true)
       )
     }
-
-    imgMask = sketch.loadImage("assets/maskhq.png")
-    // console.log(imgMask)
   }
 
   sketch.setup = () => {
@@ -60,12 +55,6 @@ const sketch = (sketch) => {
     fft = new p5.FFT()
     peakDetect = new p5.PeakDetect()
     amplitude = new p5.Amplitude()
-
-    circles = sketch.createImage(
-      sketch.floor(blocks[5].w),
-      sketch.floor(blocks[5].h)
-    )
-    // sketch.drawCircles()
 
     grid = sketch.createImage(
       sketch.floor(blocks[2].w),
@@ -92,14 +81,12 @@ const sketch = (sketch) => {
 
   sketch.drawShader = (block, shader) => {
     if (!shader) {
-      // sketch.fill("#333")
-      // sketch.rect(block.x + offset, block.y, block.w, block.h)
       return
     }
 
     sketch.texture(rtt)
     rtt.shader(shader)
-    // sketch.setUniforms(shader, [block.w, block.h])
+
     sketch.setUniforms(shader, [block.w, block.h])
     rtt.rect(0, 0, width, height)
     sketch.rect(block.x + offset, block.y, block.w, block.h)
@@ -120,30 +107,6 @@ const sketch = (sketch) => {
     grid.updatePixels()
   }
 
-  sketch.drawCircles = () => {
-    // circles.loadPixels()
-
-    const radius = circles.width / 5 / 2
-
-    for (let x = 0; x < circles.width; x++) {
-      for (let y = 0; y < circles.height; y++) {
-        let color = sketch.color(180, 180, 100)
-        for (let i = 0; i < 5; i++) {
-          let centerX =
-            circles.width / 2 + i * radius * 2 - circles.width / 2 + radius
-          let centerY = circles.height / 2
-          const dist = sketch.dist(x, y, centerX, centerY)
-          if (dist < radius) {
-            color = 255
-          }
-        }
-        circles.set(x, y, color)
-      }
-    }
-
-    circles.updatePixels()
-  }
-
   sketch.draw = () => {
     // on vérifie que tous les shaders sont chargés
     const ready = shaders.filter((el) => !el.loaded).length === 0
@@ -153,12 +116,6 @@ const sketch = (sketch) => {
     sketch.rect(-width / 2, -height / 2, width, height)
 
     if (ready) {
-      // if (fft.getEnergy('bass') > (fft.getEnergy('mid') + 100)) {
-      //   offset += Math.random() > 0.5 ? 1 : -1;
-      // } else {
-      //   offset = 0;
-      // }
-
       // on dessine la grille et les shaders
       for (const block of blocks) {
         let blockShader = null
@@ -177,24 +134,10 @@ const sketch = (sketch) => {
         .find((el) => el.frag === "grid")
         .program.setUniform("uTexture", grid)
 
-      // shaders
-      //   .find((el) => el.frag === "circles")
-      //   .program.setUniform("uTexture", imgMask)
 
-      // shaders
-      //   .find((el) => el.frag === "blur")
-      //   .program.setUniform("uTexture", imgMask)
-
-      // sketch.fill('pink')
-      // sketch.rect(blocks[5].x, blocks[5].y, blocks[5].w, blocks[5].h)
-
-      // fft.analyze()
       peakDetect.update(fft)
 
       if (sound.isPlaying()) {
-      
-        // console.log(fft.getEnergy('bass')/fft.getEnergy('mid'))
-
         time += 0.1
         tempo += 0.1 + amplitude.getLevel() * 0.2
 
@@ -239,31 +182,6 @@ const sketch = (sketch) => {
             0,
             1
           )
-        }
-
-        // console.log(beat)
-        // console.log(currTime)
-
-        if (beat) {
-          // console.log(sketch.map(sound.currentTime(), currTime, currTime + 1, 0, 1))
-          beatValue = sketch.map(sound.currentTime(), currTime, currTime + 1, 0, 1)
-        } else {
-          beatValue = sketch.map(sound.currentTime(), currTime, currTime + 1, 1, 0)
-        }
-
-
-
-        if (!beat) {
-          if (peakDetect.isDetected) {
-            // console.log("!!!")
-            currTime = sound.currentTime()
-            beat = true
-
-            setTimeout(() => {
-              currTime = sound.currentTime()
-              beat = false
-            }, 1000)
-          }
         }
       }
     }

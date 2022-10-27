@@ -1,12 +1,6 @@
 export const shaders = [
   {
     vert: "basic",
-    frag: "circles",
-    program: null,
-    loaded: false,
-  },
-  {
-    vert: "basic",
     frag: "waves",
     program: null,
     loaded: false,
