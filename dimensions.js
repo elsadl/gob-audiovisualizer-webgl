@@ -1,14 +1,14 @@
-// export const width = window.innerWidth
-// export const height = window.innerHeight
-export const width = 1400
-export const height = 800
+export const width = window.innerWidth
+export const height = 0.6 * width
+// export const width = 1400
+// export const height = 800
 
 export const margin = {
-  right: 100,
-  left: 100,
-  top: 120,
-  bottom: 90,
-  gutter: 30,
+  right: width * 0.12,
+  left: width * 0.12,
+  top: height * 0.15,
+  bottom: height * 0.15,
+  gutter: 0.012 * width,
 }
 
 export const canvas = {
