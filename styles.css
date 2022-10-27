@@ -8,6 +8,7 @@ body {
     background-color: #000;
     flex-direction: column;
     margin: 0 auto;
+    font-size: 0;
 }
 
 #p5_loading {
@@ -16,6 +17,7 @@ body {
 
 canvas {
     transition: transform 0.01s;
+    max-width: 100%;
 }
 
 .bass {

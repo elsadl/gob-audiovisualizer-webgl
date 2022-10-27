@@ -1,13 +1,13 @@
 export const width = window.innerWidth
-export const height = 0.6 * width
+export const height = Math.min(window.innerWidth * 0.6, window.innerHeight)
 // export const width = 1400
 // export const height = 800
 
 export const margin = {
   right: width * 0.12,
   left: width * 0.12,
-  top: height * 0.15,
-  bottom: height * 0.15,
+  top: width * 0.08,
+  bottom: width * 0.08,
   gutter: 0.012 * width,
 }
 
