@@ -2,13 +2,23 @@ import { width, height, blocks, margin } from "./dimensions.js"
 import { shaders } from "./shaders.js"
 
 let rtt
-let time = 1
+let time = 0
+let currTime = 0
 let tempo = 1
+let blue = 0
+let tr = 2
 
 let sound
 let fft
+let peakDetect
 let amplitude
 
+let beat = false
+let beatValue = 0
+
+let classActive = false
+
+let imgMask
 let grid
 let circles
 let offset = 0
@@ -27,6 +37,9 @@ const sketch = (sketch) => {
         () => (element.loaded = true)
       )
     }
+
+    imgMask = sketch.loadImage("assets/maskhq.png")
+    // console.log(imgMask)
   }
 
   sketch.setup = () => {
@@ -45,6 +58,7 @@ const sketch = (sketch) => {
 
     // on setup l'analyse du son
     fft = new p5.FFT()
+    peakDetect = new p5.PeakDetect()
     amplitude = new p5.Amplitude()
 
     circles = sketch.createImage(
@@ -63,15 +77,17 @@ const sketch = (sketch) => {
   sketch.setUniforms = (target, resolution) => {
     fft.analyze()
     target.setUniform("uResolution", resolution)
-    target.setUniform("uTime", time)
+    target.setUniform("uTime", time + 1)
     target.setUniform("uTempo", tempo)
+    target.setUniform("uBeat", beat)
+    target.setUniform("uRandom", Math.random())
+    target.setUniform("uBlue", blue)
     target.setUniform("uLevel", amplitude.getLevel())
     target.setUniform("uTreble", fft.getEnergy("treble"))
     target.setUniform("uHighMid", fft.getEnergy("highMid"))
     target.setUniform("uMid", fft.getEnergy("mid"))
     target.setUniform("uLowMid", fft.getEnergy("lowMid"))
     target.setUniform("uBass", fft.getEnergy("bass"))
-    // target.setUniform("uBass", fft.getEnergy("mid") + 85)
   }
 
   sketch.drawShader = (block, shader) => {
@@ -94,8 +110,8 @@ const sketch = (sketch) => {
 
     for (let x = 0; x < grid.width * 2; x++) {
       for (let y = 0; y < grid.height; y++) {
-        const lineX = x % 15 === 0 ? 1 : 0
-        const lineY = y % 15 === 0 ? 1 : 0
+        const lineX = x % 18 === 0 ? 1 : 0
+        const lineY = y % 18 === 0 ? 1 : 0
         const color = (lineY + lineX) * 120
         grid.set(x, y, color)
       }
@@ -161,25 +177,94 @@ const sketch = (sketch) => {
         .find((el) => el.frag === "grid")
         .program.setUniform("uTexture", grid)
 
-      shaders
-        .find((el) => el.frag === "circles")
-        .program.setUniform("uTexture", circles)
+      // shaders
+      //   .find((el) => el.frag === "circles")
+      //   .program.setUniform("uTexture", imgMask)
+
+      // shaders
+      //   .find((el) => el.frag === "blur")
+      //   .program.setUniform("uTexture", imgMask)
 
       // sketch.fill('pink')
       // sketch.rect(blocks[5].x, blocks[5].y, blocks[5].w, blocks[5].h)
 
-
-      // console.log(amplitude.getLevel() > 0.5)
-      // console.log((fft.getEnergy('treble') / fft.getEnergy('bass')) > 0.5)
-      // console.log(fft.getEnergy('bass') - (fft.getEnergy('mid') + 80))
-      console.log('bass: ', fft.getEnergy('bass'))
-      console.log('mid: ', fft.getEnergy('mid'))
-      console.log('treble: ', fft.getEnergy('treble'))
-      // console.log('bass>mid: ', fft.getEnergy('bass') > (fft.getEnergy('mid') + 80))
+      // fft.analyze()
+      peakDetect.update(fft)
 
       if (sound.isPlaying()) {
+      
+        // console.log(fft.getEnergy('bass')/fft.getEnergy('mid'))
+
         time += 0.1
         tempo += 0.1 + amplitude.getLevel() * 0.2
+
+        if (sound.currentTime() > 26 && sound.currentTime() < 44) {
+          blue = sketch.constrain(
+            sketch.map(sound.currentTime(), 26, 26 + tr, 0, 1),
+            0,
+            1
+          )
+        }
+        if (sound.currentTime() > 44 && sound.currentTime() < 61) {
+          blue = sketch.constrain(
+            sketch.map(sound.currentTime(), 44, 44 + tr, 1, 0),
+            0,
+            1
+          )
+        }
+        if (sound.currentTime() > 61 && sound.currentTime() < 96) {
+          blue = sketch.constrain(
+            sketch.map(sound.currentTime(), 61, 61 + tr, 0, 1),
+            0,
+            1
+          )
+        }
+        if (sound.currentTime() > 96 && sound.currentTime() < 132) {
+          blue = sketch.constrain(
+            sketch.map(sound.currentTime(), 96, 96 + tr, 1, 0),
+            0,
+            1
+          )
+        }
+        if (sound.currentTime() > 132 && sound.currentTime() < 152) {
+          blue = sketch.constrain(
+            sketch.map(sound.currentTime(), 132, 132 + tr, 0, 1),
+            0,
+            1
+          )
+        }
+        if (sound.currentTime() > 152) {
+          blue = sketch.constrain(
+            sketch.map(sound.currentTime(), 152, 152 + tr, 1, 0),
+            0,
+            1
+          )
+        }
+
+        // console.log(beat)
+        // console.log(currTime)
+
+        if (beat) {
+          console.log(sketch.map(sound.currentTime(), currTime, currTime + 1, 0, 1))
+          beatValue = sketch.map(sound.currentTime(), currTime, currTime + 1, 0, 1)
+        } else {
+          beatValue = sketch.map(sound.currentTime(), currTime, currTime + 1, 1, 0)
+        }
+
+
+
+        if (!beat) {
+          if (peakDetect.isDetected) {
+            console.log("!!!")
+            currTime = sound.currentTime()
+            beat = true
+
+            setTimeout(() => {
+              currTime = sound.currentTime()
+              beat = false
+            }, 1000)
+          }
+        }
       }
     }
   }

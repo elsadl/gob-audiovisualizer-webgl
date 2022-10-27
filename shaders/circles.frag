@@ -1,6 +1,13 @@
 precision highp float;
 
 float map(float value, float min1, float max1, float min2, float max2) {
+  float result = min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+  if (result < min2) {
+    return min2;
+  }
+  if (result > max2) {
+    return max2;
+  }
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
 }
 
@@ -109,6 +116,7 @@ float circle(vec2 _st, float _radius, float _smoothness){
 
 uniform vec2 uResolution;
 uniform float uTime;
+uniform float uTempo;
 uniform float uLevel;
 uniform sampler2D uTexture;
 
@@ -119,23 +127,58 @@ uniform float uHighMid;
 uniform float uTreble;
 
 varying vec2 vTexCoord;
+vec3 color = vec3(1., 1., 1.);
+
+// float mask = 1.;
+const int circlesNb = 20;
+float step = 1. / float(circlesNb);
+
+float drawCircles(vec2 coord, float freq, float index) {
+    float posX = coord.x;
+
+    float mask = 1.;
+
+    for (int i = 1; i < circlesNb; i++) {
+      float offsetX = step * float(i) * freq;
+      float offsetY = 0.2 - (index * 0.2);
+
+      float circleLeft = circle(coord + vec2(-0.5 - offsetX, offsetY),  0.1, 0.01);
+      float circleRight = circle(coord + vec2(-0.5 + offsetX, offsetY),  0.1, 0.01);
+
+      mask *= circleRight * circleLeft;
+    }
+
+    // color.g -= cell * 0.3;
+    // color.r += cell * 0.3;
+    // color.b -= cell * 0.1;
+    return mask;
+}
 
 void main () {
   vec2 coord = vTexCoord;
+  coord *= vec2(2., 1.);
 
-  vec3 color = vec3(1., 1., 0.75);
+  float grain = random(coord) * 0.1;
 
-  // float lineWidth = 0.01;
 
-  if (uLevel > 0.) {
-  coord += pnoise(vec3(coord * (1. + uLevel), 1.)) * .4;
-  }
+  float highMid = map(uHighMid, 30., 150., .0, 2.);
+  float lowMid = map(uLowMid, 100., 250., .0, 1.);
 
-  // coord.x += random(vec2(uTime)) * 0.02;
+  float treble = map(uTreble, 0., 100., .0, .6);
+  float mid = map(uMid, 100., 200., .0, .6);
+  float bass = map(uBass, 0., 260., .0, .6);
 
-  // float mask = step(0.1, coord.y);
-  // float mask2 = step(0.1 + lineWidth, coord.y);
-  // color *= mask - mask2;
+  float bassCircles = drawCircles(coord, bass, 0.);
+  float midCircles = drawCircles(coord, mid, 1.);
+  float trebleCircles = drawCircles(coord, treble, 2.);
+
+
+  float mask = bassCircles * midCircles * trebleCircles;
+  // drawCircle(coord + vec2(-0.5, 0.), treble, 0.);
+  // drawCircle(coord + vec2(-0.5 - offset, 0.), treble, 0.);
+  color *= 1.-(mask);
+
+  color += (30./255.);
 
   gl_FragColor = vec4(color, 1.);
 }

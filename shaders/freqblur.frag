@@ -1,6 +1,13 @@
 precision highp float;
 
 float map(float value, float min1, float max1, float min2, float max2) {
+  float result = min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+  if (result < min2) {
+    return min2;
+  }
+  if (result > max2) {
+    return max2;
+  }
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
 }
 
@@ -100,10 +107,19 @@ vec3 getPerlinTurbulence( vec2 position, float scale, float strength, float time
 }
 // fin perlin noise
 
+float circle(vec2 _st, float _radius, float _smoothness){
+    vec2 dist = _st-vec2(0.5);
+	return smoothstep(_radius-(_radius*_smoothness),
+                         _radius+(_radius*_smoothness),
+                         dot(dist,dist)*4.0);
+}
+
 uniform vec2 uResolution;
 uniform float uTime;
+uniform float uTempo;
 uniform float uLevel;
 uniform sampler2D uTexture;
+uniform float uBlue;
 
 uniform float uBass;
 uniform float uLowMid;
@@ -112,54 +128,66 @@ uniform float uHighMid;
 uniform float uTreble;
 
 varying vec2 vTexCoord;
+  vec3 color = vec3(1., 1., 1.);
 
-float circle(vec2 _st, float _radius, float _smoothness){
-    vec2 dist = _st-vec2(0.5);
-	return smoothstep(_radius-(_radius*_smoothness),
-                         _radius+(_radius*_smoothness),
-                         dot(dist,dist)*4.0);
+float frame (float top, float left, vec2 coord) {
+  float marginTop = step(top, coord.y);
+  float marginBottom = step(top, 1.-coord.y);
+  float marginLeft = step(left, coord.x);
+  float marginRight = step(left, 1.-coord.x);
+  return marginTop * marginBottom * marginRight * marginLeft;
+}
+
+void drawCell(vec2 coord, float freq, float index) {
+    float posX = coord.x;
+    // posX += pnoise(vec3(1.*fract(coord.y * 60.) + index, 1., 1.)) * 1.;
+    float intensity = map(uBass, 100., 300., 0.1, 2.);
+    posX += pnoise(vec3(coord.y, index + uTempo * 0.001, intensity)) * .2;
+
+    float cell = smoothstep(0.2 * float(index) * freq, 0.2 * float(index) * freq + .4, posX) * 0.5;
+
+    color.g -= cell * 0.3;
+    color.r += cell * 0.3;
+    color.b -= cell * 0.1;
 }
 
 void main () {
   vec2 coord = vTexCoord;
-	vec3 color = vec3(1.);
 
-  coord *= 100.;
+  float grain = random(coord) * 0.1;
 
+  float glitchOffset = map(uBass, 0., 300., 0., 0.4);
+  float glitch = smoothstep(1.1 - glitchOffset, 1.1, coord.y);
 
-  // float widthMask = step(0.5 + uLevel, coord.x);
+  // coord.x += pnoise(vec3(sin(coord * uLevel*2. * uTime * 100.) / 10., 1.));
 
-  // float mask = coord.y + sin(uLevel * 0.5);
-  // float disc = circle(coord * vec2(2., 1.) + vec2(-0.5, 0.), .8);
-  float mask = coord.y + pnoise(vec3(coord, uTime * .05));
-  float noiseValue1 = random(coord * sin(uTime) * 2.) * 0.2;
-  float noiseValue2 = random(coord * cos(uTime) * 2.) * 0.05;
+  // coord.x += pnoise(vec3(sin(coord * uLevel * 100.) / 10., .01))/10.;
 
-  mask -= noiseValue1;
+  float treble = map(uTreble, 0., 100., .0, 2.);
+  float highMid = map(uHighMid, 30., 150., .0, 2.);
+  float mid = map(uMid, 100., 200., .0, 2.);
+  float lowMid = map(uLowMid, 100., 250., .0, 1.);
+  float bass = map(uBass, 100., 300., .0, 1.);
+
+  drawCell(coord, treble, 0.);
+  drawCell(coord, highMid, 1.);
+  drawCell(coord, mid, 2.);
+  drawCell(coord, lowMid, 3.);
+  drawCell(coord, bass, 4.);
   
-  color.r = (cos(uTime/4.) + sin(uTime/6.) * coord.x);
-  color.g = coord.y;
-  // color.b = 1.- coord.y * (sin(mod(uTime, 1.) + coord.x) + coord.x) * 0.1;
-  // color.b += 1. - (cos(uTime/4.) + sin(uTime/6.) * coord.x) * .2;
+  color.r -= .8 * (1. - coord.x);
+  color *= vec3(180./255., 180./255., 110./255.) * 1.8;
 
+  color.r -= 1.2 * uBlue;
+  color.g += .1 * uBlue;
+  color.b += .2 * uBlue;
 
-  color *= (mask + .9);
+  float glitchIntensity = map(uBass, 0., 300., 0., 1.);
+  color.g += glitch * glitchIntensity;
+  color.b += glitch * 0.4 * glitchIntensity;
 
-  color += noiseValue2 * 1. -mask;
-
-  color.r += 0.6;
-  color.g += 0.5 * coord.x * coord.y;
-  color.b -= 0.5;
-
-  color += 0.2;
-
-  // vec4 imgMask = texture2D(uTexture, coord);
-
-  // color = mix(vec3(0./255.), color, imgMask.xyz);
-
-  // color *= 1. - widthMask;
-
-  // color *= 1.-disc;
+  color -= grain;
+  // color += 0.1;
 
   gl_FragColor = vec4(color, 1.);
 }

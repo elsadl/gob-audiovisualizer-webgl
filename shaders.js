@@ -19,7 +19,7 @@ export const shaders = [
   },
   {
     vert: "basic",
-    frag: "blur",
+    frag: "freqblur",
     program: null,
     loaded: false,
   },
@@ -32,6 +32,12 @@ export const shaders = [
   {
     vert: "basic",
     frag: "grid",
+    program: null,
+    loaded: false,
+  },
+  {
+    vert: "basic",
+    frag: "pixels",
     program: null,
     loaded: false,
   },

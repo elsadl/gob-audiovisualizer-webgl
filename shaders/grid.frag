@@ -143,33 +143,24 @@ void main () {
 
   // color *= color.x;
 
-  vec4 data = texture2D(
-        uTexture,
-        // Convert index into pixel coordinate
-        // (note: offset by 0.5 to ensure we sample the center of each pixel)
-        coord
-      );
-
-  vec4 data2 = texture2D(
-        uTexture,
-        // Convert index into pixel coordinate
-        // (note: offset by 0.5 to ensure we sample the center of each pixel)
-        coord + 0.005
-      );
+  vec4 data = texture2D(uTexture, coord);
+  vec4 data2 = texture2D(uTexture, coord + 0.005);
 
 
   color = data.xyz;
   color += data2.xyz;
 
+  color += vec3(30./255.);
+
 // r0.4 g0.25 b0.25
   // color.r += (1. - colorCircle1 - grainNoise) * 0.4;
   // color.g += (1. - colorCircle1 - grainNoise) * 0.25;
-  color += (1. - colorCircle1 - grainNoise) * 0.3;
+  color += (1. - colorCircle1 - grainNoise) * 0.05;
 
 // r0.3 g0.3 b0.2
   // color.r += (1. - colorCircle2 - grainNoise) * 0.3;
   // color.g += (1. - colorCircle2 - grainNoise) * 0.3;
-  color += (1. - colorCircle2 - grainNoise) * 0.4;
+  color += (1. - colorCircle2 - grainNoise) * 0.1;
 
 
   // float mask = step(0.1, coord.y);

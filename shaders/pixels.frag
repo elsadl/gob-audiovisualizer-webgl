@@ -1,6 +1,13 @@
 precision highp float;
 
 float map(float value, float min1, float max1, float min2, float max2) {
+  float result = min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+  if (result < min2) {
+    return min2;
+  }
+  if (result > max2) {
+    return max2;
+  }
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
 }
 
@@ -100,10 +107,20 @@ vec3 getPerlinTurbulence( vec2 position, float scale, float strength, float time
 }
 // fin perlin noise
 
+float circle(vec2 _st, float _radius, float _smoothness){
+    vec2 dist = _st-vec2(0.5);
+	return smoothstep(_radius-(_radius*_smoothness),
+                         _radius+(_radius*_smoothness),
+                         dot(dist,dist)*4.0);
+}
+
 uniform vec2 uResolution;
 uniform float uTime;
+uniform float uTempo;
+uniform float uRandom;
 uniform float uLevel;
 uniform sampler2D uTexture;
+uniform float uBlue;
 
 uniform float uBass;
 uniform float uLowMid;
@@ -112,54 +129,65 @@ uniform float uHighMid;
 uniform float uTreble;
 
 varying vec2 vTexCoord;
-
-float circle(vec2 _st, float _radius, float _smoothness){
-    vec2 dist = _st-vec2(0.5);
-	return smoothstep(_radius-(_radius*_smoothness),
-                         _radius+(_radius*_smoothness),
-                         dot(dist,dist)*4.0);
-}
+vec3 color = vec3(30./255.);
 
 void main () {
   vec2 coord = vTexCoord;
-	vec3 color = vec3(1.);
 
-  coord *= 100.;
+  coord.x *= 2.;
+  coord *= (1., 10.);
+
+  float grainNoise = pnoise(vec3(random(coord + uTime), 1., 1.));
+  float positionNoise = pnoise(vec3(random(coord), uTime / 20., 1.));
+
+  float colorCircle = circle(coord - vec2(0.5, 0.5 + positionNoise), 1., 2.);
+
+  vec2 pixel = floor(coord);
+  vec2 pixel2 = floor(coord + 0.1);
+
+  float mid = map(uMid, 0., 300., 0.5, 1.);
+  float bass = map(uBass, 0., 200., .8, 0.);
+
+  // vec3 mask = vec3(random(pixel), random(vec2(1.)), random(coord));
+  vec3 mask = vec3(255./255., 40./255., 140./255.);
+  vec3 mask2 = vec3(255./255., 255./255., 140./255.);
+
+  mask2.g += 1.;
+
+  mask.r -= .2 * uBlue;
+  mask.g += .1 * uBlue;
+  mask.b += .6 * uBlue;
+
+  float noise = pnoise(vec3(random(pixel), uTime * 0.05, .8));
+  float noise2 = pnoise(vec3(random(pixel2), uTime * 0.05, .8));
+
+  // mask.r *= 2.;
+  // mask.g *= 1.5;
+  // mask.b *= 1.5;
+  // color.b += .2;
+
+  mask.g -= coord.y/10. * sin(coord.x/10. + uTime * 0.005) * .2;
 
 
-  // float widthMask = step(0.5 + uLevel, coord.x);
+    float grain = random(coord + uTime) * 0.1;
+  mask -= grain;
 
-  // float mask = coord.y + sin(uLevel * 0.5);
-  // float disc = circle(coord * vec2(2., 1.) + vec2(-0.5, 0.), .8);
-  float mask = coord.y + pnoise(vec3(coord, uTime * .05));
-  float noiseValue1 = random(coord * sin(uTime) * 2.) * 0.2;
-  float noiseValue2 = random(coord * cos(uTime) * 2.) * 0.05;
+  // mask *= smoothstep(uLevel / 2., uLevel / 2. + 0.0, noise);
 
-  mask -= noiseValue1;
-  
-  color.r = (cos(uTime/4.) + sin(uTime/6.) * coord.x);
-  color.g = coord.y;
-  // color.b = 1.- coord.y * (sin(mod(uTime, 1.) + coord.x) + coord.x) * 0.1;
-  // color.b += 1. - (cos(uTime/4.) + sin(uTime/6.) * coord.x) * .2;
+  if (bass > 0.) {
+    mask *= step(0.5, noise + bass);
+    mask2 *= step(0.5, noise2 + bass);
+  }
 
+  mask2 += grain * 10. * mask;
 
-  color *= (mask + .9);
+  mask = mix(mask, mask2, 0.2);
 
-  color += noiseValue2 * 1. -mask;
+  color += mask;
 
-  color.r += 0.6;
-  color.g += 0.5 * coord.x * coord.y;
-  color.b -= 0.5;
-
-  color += 0.2;
-
-  // vec4 imgMask = texture2D(uTexture, coord);
-
-  // color = mix(vec3(0./255.), color, imgMask.xyz);
-
-  // color *= 1. - widthMask;
-
-  // color *= 1.-disc;
+  // color.r += .2;
+  // color.g += .2;
+  // color.b -= .1;
 
   gl_FragColor = vec4(color, 1.);
 }

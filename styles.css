@@ -2,12 +2,34 @@ body {
     margin: 0;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     height: 100vh;
-    width: 100vw;
+    /* width: 80vw; */
     background-color: #000;
+    flex-direction: column;
+    margin: 0 auto;
 }
 
 #p5_loading {
     opacity: 0;
+}
+
+canvas {
+    /* max-width: 100%; */
+    /* max-height: 80vh; */
+    transition: transform 0.01s;
+}
+
+.bass {
+    transform: scale(1.01);
+}
+
+#play-btn {
+    display: none;
+    color: #fff;
+    text-transform: uppercase;
+    font-family: 'Gill Sans';
+    letter-spacing: 2px;
+    font-size: 1.4em;
+    opacity: 0.8;
 }

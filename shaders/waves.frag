@@ -105,6 +105,8 @@ uniform vec2 uResolution;
 uniform float uTime;
 uniform float uTempo;
 uniform float uLevel;
+uniform float uBlue;
+uniform float uBeat;
 
 uniform float uBass;
 uniform float uLowMid;
@@ -144,7 +146,7 @@ void drawWave(float freq, vec2 position, float index) {
     // mask -= mask1 * mask2;
 
     float mappedPosY = map(posY, .5 - lineWidth, .5 + lineWidth, 0., 1.);
-    float noiseValue = random(position * 10.) * 0.6;
+    float noiseValue = random(position*uTime) * 0.4;
 
     mask1 -= noiseValue;
 
@@ -180,6 +182,11 @@ void main () {
   color.r += 0.4;
   color.b -= 0.1;
   color.g += 0.2;
+
+  color.r -= 1.2 * uBlue;
+  color.g += .1 * uBlue;
+  color.b += .2 * uBlue;
+
   // color.g += 0.2;
   // color.b -= 0.1;
 

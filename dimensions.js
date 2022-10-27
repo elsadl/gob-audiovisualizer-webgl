@@ -6,8 +6,8 @@ export const height = 800
 export const margin = {
   right: 100,
   left: 100,
-  top: 100,
-  bottom: 100,
+  top: 120,
+  bottom: 90,
   gutter: 30,
 }
 
@@ -36,7 +36,7 @@ blocks[1] = {
   y: canvas.y + blocks[0].h + margin.gutter,
   w: colWidth,
   h: canvas.h / 4,
-  shader: 'blur'
+  shader: 'pixels'
 }
 
 blocks[2] = {
@@ -68,5 +68,5 @@ blocks[5] = {
   y: canvas.y + blocks[2].h + margin.gutter,
   w: canvas.w - colWidth - margin.gutter,
   h: canvas.h / 2 - margin.gutter / 2,
-  shader: 'circles'
+  shader: 'freqblur'
 }

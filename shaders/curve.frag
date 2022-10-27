@@ -103,6 +103,7 @@ vec3 getPerlinTurbulence( vec2 position, float scale, float strength, float time
 uniform vec2 uResolution;
 uniform float uTime;
 uniform float uLevel;
+uniform float uBlue;
 
 uniform float uBass;
 uniform float uLowMid;
@@ -130,11 +131,13 @@ void main () {
     lineWidth = 0.2 * (coord.x * 8. + 1.) * intensity;
   }
 
+
+  float glitchOffset = map(uBass, 100., 400., 0.005, 0.02);
   float smoothness = 0.02;
   
   // float mask1 = step(0.5 - lineWidth, coord.y);
   float mask0 = smoothstep(0.5 - lineWidth, 0.5 + smoothness * .5 - lineWidth, coord.y);
-  float mask1 = smoothstep(0.5 - lineWidth, (0.5 + smoothness) - lineWidth, coord.y);
+  float mask1 = smoothstep(0.5 - lineWidth, (0.5 + glitchOffset * 2. + smoothness) - lineWidth, coord.y);
   float mask2 = 1. - smoothstep(0.5 + lineWidth, (0.5 + smoothness) + lineWidth, coord.y);
   // float mask3 = 1. - smoothstep(0.51 + lineWidth, 0.5 + smoothness*.5 + lineWidth, coord.y);
 
@@ -156,15 +159,20 @@ void main () {
 
   color *= mask;
 
-  if (uBass - (uMid + 80.) > 0.) {
+  float glitchIntensity = map(uBass, 100., 300., 0., 2.);
+  color.r += (mask0 - mask1) * 0.25 * glitchIntensity;
+  color.b += (mask0 - mask1) * 0.25 * glitchIntensity;
+  color.g += (mask0 - mask1) * 2. * glitchIntensity;  
 
-        color.r += (mask0 - mask1) * 0.25;
-    color.b += (mask0 - mask1) * 0.25;
-    color.g += (mask0 - mask1) * 3.;
-} else {
-    color.r += (mask0 - mask1) * 0.5;
-    color.b += (mask0 - mask1) * 0.5;
-    color.g += (mask0 - mask1) * 6.;}
+//   if (uBass - (uMid + 80.) > 0.) {
+//     color.r += (mask0 - mask1) * 0.25;
+//     color.b += (mask0 - mask1) * 0.25;
+//     color.g += (mask0 - mask1) * 3.;
+// } else {
+//     color.r += (mask0 - mask1) * 0.5;
+//     color.b += (mask0 - mask1) * 0.5;
+//     color.g += (mask0 - mask1) * 6.;  
+//   }
 
   // color.r += (mask3 - mask2) * 3.;
   // color.b += (mask3 - mask2) * 1.;
@@ -175,6 +183,10 @@ void main () {
   color.r += (1.-mask) * 30./255.;
   color.g += (1.-mask) * 30./255.;
   color.b += (1.-mask) * 30./255.;
+
+  color.r -= (mask) * (1.2 * uBlue);
+  color.g += (mask) * (.1 * uBlue);
+  color.b += (mask) * (.2 * uBlue);
 
   gl_FragColor = vec4(color, 1.);
 }

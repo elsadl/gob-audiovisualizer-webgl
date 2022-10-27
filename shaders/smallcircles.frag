@@ -111,6 +111,7 @@ uniform vec2 uResolution;
 uniform float uTime;
 uniform float uLevel;
 uniform float uTempo;
+uniform float uBlue;
 
 uniform float uBass;
 uniform float uLowMid;
@@ -165,6 +166,9 @@ void main () {
   color.r += 0.2;
   color.b -= 0.58;
 
+  color.r -= .8 * uBlue;
+  color.g -= .5 * uBlue;
+  color.b += 2. * uBlue;
 
   color.b -= discMid * 0.1;
   color.b -= discTreble * 0.2;
