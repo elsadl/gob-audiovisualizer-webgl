@@ -160,9 +160,14 @@ void main () {
   color *= mask;
 
   float glitchIntensity = map(uBass, 100., 300., 0., 2.);
+  // float glitchIntensity = 1.;
   color.r += (mask0 - mask1) * 0.25 * glitchIntensity;
   color.b += (mask0 - mask1) * 0.25 * glitchIntensity;
-  color.g += (mask0 - mask1) * 2. * glitchIntensity;  
+  color.g += (mask0 - mask1) * 2. * glitchIntensity; 
+
+  color.r += (mask0 - mask1) * .8 * glitchIntensity * uBlue;
+  color.b += (mask0 - mask1) * 1. * glitchIntensity * uBlue;
+  color.g -= (mask0 - mask1) * 2. * glitchIntensity * uBlue;
 
 //   if (uBass - (uMid + 80.) > 0.) {
 //     color.r += (mask0 - mask1) * 0.25;
