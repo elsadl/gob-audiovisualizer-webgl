@@ -245,7 +245,7 @@ const sketch = (sketch) => {
         // console.log(currTime)
 
         if (beat) {
-          console.log(sketch.map(sound.currentTime(), currTime, currTime + 1, 0, 1))
+          // console.log(sketch.map(sound.currentTime(), currTime, currTime + 1, 0, 1))
           beatValue = sketch.map(sound.currentTime(), currTime, currTime + 1, 0, 1)
         } else {
           beatValue = sketch.map(sound.currentTime(), currTime, currTime + 1, 1, 0)
@@ -255,7 +255,7 @@ const sketch = (sketch) => {
 
         if (!beat) {
           if (peakDetect.isDetected) {
-            console.log("!!!")
+            // console.log("!!!")
             currTime = sound.currentTime()
             beat = true
 
