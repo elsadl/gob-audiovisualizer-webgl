@@ -1,5 +1,9 @@
 precision highp float;
 
+float random (vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
+}
+
 float map(float value, float min1, float max1, float min2, float max2) {
   float result = min2 + (value - min1) * (max2 - min2) / (max1 - min1);
   if (result < min2) {
@@ -9,12 +13,6 @@ float map(float value, float min1, float max1, float min2, float max2) {
     return max2;
   }
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
-}
-
-float random (vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
 }
 
 // perlin noise
@@ -107,16 +105,11 @@ vec3 getPerlinTurbulence( vec2 position, float scale, float strength, float time
 }
 // fin perlin noise
 
-uniform vec2 uResolution;
 uniform float uTime;
 uniform float uLevel;
-uniform float uTempo;
 uniform float uBlue;
 
 uniform float uBass;
-uniform float uLowMid;
-uniform float uMid;
-uniform float uHighMid;
 uniform float uTreble;
 
 varying vec2 vTexCoord;
@@ -133,14 +126,11 @@ void main () {
 	vec3 color = vec3(1.);
 
   float mappedTreble = map(uTreble, 100., 150., 0.3, 0.8);
-  float mappedMid = map(uMid, 100., 200., 0.3, 0.8);
   float mappedBass = map(uBass, 100., 300., 0.3, 0.8);
-
   float mid = mix(mappedTreble, mappedBass, 0.5);
 
-  // float mask = coord.y + sin(uLevel * 0.5);
-  float discMid = circle(coord * vec2(1., 2.) + vec2(0., -.5), mid, mid *0.33);
   float discTreble = circle(coord * vec2(1., 2.) + vec2(0., -1.), mappedTreble, mappedTreble *0.33);
+  float discMid = circle(coord * vec2(1., 2.) + vec2(0., -.5), mid, mid *0.33);
   float discBass = circle(coord * vec2(1., 2.) + vec2(0., -0.), mappedBass, mappedBass *0.33);
 
   float mask = coord.y + pnoise(vec3(coord, uTime * .05));
@@ -149,15 +139,7 @@ void main () {
 
   mask -= noiseValue1;
   
-  // color.r = (cos(uTime/4.) + sin(uTime/6.) * coord.x);
-  // color.g -= ((1. - coord.y) * (cos(uTempo/2.) + sin(uTempo/2.)) + 0.4) * 1. -uLevel;
   color.g -= ((1. - coord.y) + 0.4) * (1.2 - uLevel);
-  // color.g = coord.y * cos(3.) + 0.6;
-  // color.b = 1.- coord.y * (sin(mod(uTime, 1.) + coord.x) + coord.x) * 0.1;
-  // color.b += 1. - (cos(uTime/4.) + sin(uTime/6.) * coord.x) * .2;
-
-  // float disc = circle(coord, 0.5);
-
 
   color *= (mask + .9);
 
@@ -176,11 +158,10 @@ void main () {
   color.g += discMid * 0.2;
   color.g += discTreble * 0.4;
 
-  color += (1.-coord.y) * 0.8;
+  color += (1. - coord.y) * 0.8;
 
-  float maskDisc = discTreble*discMid*discBass;
-
-  color *= 1.-maskDisc;
+  float maskDisc = discTreble * discMid * discBass;
+  color *= 1. - maskDisc;
 
   color.r += (maskDisc) * 30./255.;
   color.g += (maskDisc) * 30./255.;

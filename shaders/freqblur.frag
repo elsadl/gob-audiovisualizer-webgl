@@ -1,6 +1,10 @@
 precision highp float;
 
-float map(float value, float min1, float max1, float min2, float max2) {
+float random (vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
+}
+
+float map (float value, float min1, float max1, float min2, float max2) {
   float result = min2 + (value - min1) * (max2 - min2) / (max1 - min1);
   if (result < min2) {
     return min2;
@@ -9,12 +13,6 @@ float map(float value, float min1, float max1, float min2, float max2) {
     return max2;
   }
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
-}
-
-float random (vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
 }
 
 // perlin noise
@@ -108,17 +106,13 @@ vec3 getPerlinTurbulence( vec2 position, float scale, float strength, float time
 // fin perlin noise
 
 float circle(vec2 _st, float _radius, float _smoothness){
-    vec2 dist = _st-vec2(0.5);
+  vec2 dist = _st-vec2(0.5);
 	return smoothstep(_radius-(_radius*_smoothness),
                          _radius+(_radius*_smoothness),
                          dot(dist,dist)*4.0);
 }
 
-uniform vec2 uResolution;
-uniform float uTime;
 uniform float uTempo;
-uniform float uLevel;
-uniform sampler2D uTexture;
 uniform float uBlue;
 
 uniform float uBass;
@@ -128,27 +122,19 @@ uniform float uHighMid;
 uniform float uTreble;
 
 varying vec2 vTexCoord;
-  vec3 color = vec3(1., 1., 1.);
 
-float frame (float top, float left, vec2 coord) {
-  float marginTop = step(top, coord.y);
-  float marginBottom = step(top, 1.-coord.y);
-  float marginLeft = step(left, coord.x);
-  float marginRight = step(left, 1.-coord.x);
-  return marginTop * marginBottom * marginRight * marginLeft;
-}
+vec3 color = vec3(1.);
 
-void drawCell(vec2 coord, float freq, float index) {
-    float posX = coord.x;
-    // posX += pnoise(vec3(1.*fract(coord.y * 60.) + index, 1., 1.)) * 1.;
-    float intensity = map(uBass, 100., 300., 0.1, 2.);
-    posX += pnoise(vec3(coord.y, index + uTempo * 0.001, intensity)) * .2;
+void drawCell (vec2 coord, float freq, float index) {
+  float intensity = map(uBass, 100., 300., 0.1, 2.);
 
-    float cell = smoothstep(0.2 * float(index) * freq, 0.2 * float(index) * freq + .4, posX) * 0.5;
+  float posX = coord.x;
+  posX += pnoise(vec3(coord.y, index + uTempo * 0.001, intensity)) * .2;
 
-    color.g -= cell * 0.3;
-    color.r += cell * 0.3;
-    color.b -= cell * 0.1;
+  float cell = smoothstep(0.2 * float(index) * freq, 0.2 * float(index) * freq + .4, posX) * 0.5;
+  color.g -= cell * 0.3;
+  color.r += cell * 0.3;
+  color.b -= cell * 0.1;
 }
 
 void main () {
@@ -158,10 +144,6 @@ void main () {
 
   float glitchOffset = map(uBass, 0., 300., 0., 0.4);
   float glitch = smoothstep(1.1 - glitchOffset, 1.1, coord.y);
-
-  // coord.x += pnoise(vec3(sin(coord * uLevel*2. * uTime * 100.) / 10., 1.));
-
-  // coord.x += pnoise(vec3(sin(coord * uLevel * 100.) / 10., .01))/10.;
 
   float treble = map(uTreble, 0., 100., .0, 2.);
   float highMid = map(uHighMid, 30., 150., .0, 2.);
@@ -187,7 +169,6 @@ void main () {
   color.b += glitch * 0.4 * glitchIntensity;
 
   color -= grain;
-  // color += 0.1;
 
   gl_FragColor = vec4(color, 1.);
 }

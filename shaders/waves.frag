@@ -1,13 +1,11 @@
 precision highp float;
 
-float map(float value, float min1, float max1, float min2, float max2) {
-  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+float random (vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
 }
 
-float random (vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
+float map (float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
 }
 
 // perlin noise
@@ -106,79 +104,52 @@ uniform float uTime;
 uniform float uTempo;
 uniform float uLevel;
 uniform float uBlue;
-uniform float uBeat;
 
-uniform float uBass;
-uniform float uLowMid;
 uniform float uMid;
-uniform float uHighMid;
-uniform float uTreble;
 
-varying vec2 vTexCoord;
+float lineWidth = 1.;
+float smoothness = 0.01;
 
-
-  float lineWidth = 1.;
-    float smoothness = 0.01;
-
-	vec3 color = vec3(0., 0.2, 0.3);
+vec3 color = vec3(0., 0.2, 0.3);
 
 void drawWave(float freq, vec2 position, float index) {
-    float mappedFreq = map(uLevel, 0., 200., 0., 2.);
-    float posY = position.y;
-    // posY += pnoise(vec3(position.x * 5., position.y * 5., uTime * 2.)) * intensity;
-    // posY += sin(position.x) * 0.02;
+  float posY = position.y;
 
-    posY += 0.2;
-    posY += index * 0.3;
+  posY += index * 0.3 + 0.2;
 
-    float offset = (1. + uLevel);
+  posY += pnoise(vec3(position.x * 2. + (index * 0.4 + 1.) + uTime * 0.02, 1., 1.)) * 0.8;
+  posY += sin(position.x * 2. + uTempo * 0.5) * 0.15 + 0.2;
 
-    posY += pnoise(vec3(position.x * 2. + (index * 0.4 + 1.) + uTime * 0.02, 1., 1.)) * 0.8;
-    posY += sin(position.x * 2. + uTempo * 0.5) * 0.15 + 0.2;
-    // posY += mappedFreq / 10.;
-    float mask1 = smoothstep(0.5 - lineWidth, 0.5 + smoothness - lineWidth, posY);
-    float mask2 = 1. - smoothstep(0.5 + lineWidth, 0.5 + smoothness + lineWidth, posY);
+  float mask1 = smoothstep(0.5 - lineWidth, 0.5 + smoothness - lineWidth, posY);
+  float mask2 = 1. - smoothstep(0.5 + lineWidth, 0.5 + smoothness + lineWidth, posY);
+  // reflet du bas
+  float offset = (1. + uLevel) * 0.6;
+  float mask3 = 1. - smoothstep(0.4 + lineWidth, offset + lineWidth, posY);
 
-    // reflet du bas
-    float mask3 = 1. - smoothstep(0.4 + lineWidth, offset * 0.6 + lineWidth, posY);
-    // float mask4 = 1. - smoothstep(0.49 + lineWidth, 0.49 + lineWidth, posY);
+  float mappedPosY = map(posY, .5 - lineWidth, .5 + lineWidth, 0., 1.);
+  float grain = random(position*uTime) * 0.4;
 
-    // mask -= mask1 * mask2;
+  mask1 -= grain;
 
-    float mappedPosY = map(posY, .5 - lineWidth, .5 + lineWidth, 0., 1.);
-    float noiseValue = random(position*uTime) * 0.4;
+  float mask = mask1 * mask2 * mappedPosY;
+  color.r += mask * .2;
+  color.g -= mask * .4;
+  color.b -= mask * .2;
 
-    mask1 -= noiseValue;
-
-    float mask = mask1 * mask2 * mappedPosY;
-    color.r += mask * .2;
-    color.g -= mask * .4;
-    color.b -= mask * .2;
-
-    // color.r += mask3;
-    // color.g -= (mask4 - mask2);
-    // color.g += (mask3 - mask2) * (1. - position.y) * 0.6;
-    color.g += (mask3 - mask2) * 0.5;
-    color.r -= (mask3 - mask2) * 0.6;
-  }
+  color.g += (mask3 - mask2) * 0.5;
+  color.r -= (mask3 - mask2) * 0.6;
+}
 
 void main () {
-  vec2 position = gl_FragCoord.xy / uResolution.xy;
-
-  // float intensity = map(uLevel, 0., 200., .0, .5);
-  float intensity = uTime * 0.005;
-
-  // coord.y += pnoise(vec3(coord.x * 5. + uTime * 2.)) * intensity/4.;
-  float mask = 1.;
+  vec2 coord = gl_FragCoord.xy / uResolution.xy;
 
   for (int i = 0; i < 5; i++) {
-    drawWave(uMid, position/4., float(i));
+    drawWave(uMid, coord/4., float(i));
   }
 
-  // color -= mask;
-
   color += 0.5;
-  color += (1. - (position/4.).y) * 0.4;
+  color += (1. - (coord/4.).y) * 0.4;
+  
   color.r += 0.4;
   color.b -= 0.1;
   color.g += 0.2;
@@ -186,9 +157,6 @@ void main () {
   color.r -= 1.2 * uBlue;
   color.g += .1 * uBlue;
   color.b += .2 * uBlue;
-
-  // color.g += 0.2;
-  // color.b -= 0.1;
 
   gl_FragColor = vec4(color, 1.);
 }

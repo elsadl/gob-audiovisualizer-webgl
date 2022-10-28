@@ -1,5 +1,9 @@
 precision highp float;
 
+float random (vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
+}
+
 float map(float value, float min1, float max1, float min2, float max2) {
   float result = min2 + (value - min1) * (max2 - min2) / (max1 - min1);
   if (result < min2) {
@@ -9,12 +13,6 @@ float map(float value, float min1, float max1, float min2, float max2) {
     return max2;
   }
   return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
-}
-
-float random (vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
 }
 
 // perlin noise
@@ -138,9 +136,7 @@ void main () {
   coord *= (1., 10.);
 
   float grainNoise = pnoise(vec3(random(coord + uTime), 1., 1.));
-  float positionNoise = pnoise(vec3(random(coord), uTime / 20., 1.));
-
-  float colorCircle = circle(coord - vec2(0.5, 0.5 + positionNoise), 1., 2.);
+  float positionNoise = pnoise(vec3(random(coord), uTime / 200., 1.)) * 10.;
 
   vec2 pixel = floor(coord);
   vec2 pixel2 = floor(coord + 0.1);
@@ -148,7 +144,6 @@ void main () {
   float mid = map(uMid, 0., 300., 0.5, 1.);
   float bass = map(uBass, 0., 200., .8, 0.);
 
-  // vec3 mask = vec3(random(pixel), random(vec2(1.)), random(coord));
   vec3 mask = vec3(255./255., 40./255., 140./255.);
   vec3 mask2 = vec3(255./255., 255./255., 140./255.);
 
@@ -161,18 +156,10 @@ void main () {
   float noise = pnoise(vec3(random(pixel), uTime * 0.05, .8));
   float noise2 = pnoise(vec3(random(pixel2), uTime * 0.05, .8));
 
-  // mask.r *= 2.;
-  // mask.g *= 1.5;
-  // mask.b *= 1.5;
-  // color.b += .2;
-
   mask.g -= coord.y/10. * sin(coord.x/10. + uTime * 0.005) * .2;
 
-
-    float grain = random(coord + uTime) * 0.1;
+  float grain = random(coord + uTime) * 0.1;
   mask -= grain;
-
-  // mask *= smoothstep(uLevel / 2., uLevel / 2. + 0.0, noise);
 
   if (bass > 0.) {
     mask *= step(0.5, noise + bass);
@@ -184,10 +171,6 @@ void main () {
   mask = mix(mask, mask2, 0.2);
 
   color += mask;
-
-  // color.r += .2;
-  // color.g += .2;
-  // color.b -= .1;
 
   gl_FragColor = vec4(color, 1.);
 }

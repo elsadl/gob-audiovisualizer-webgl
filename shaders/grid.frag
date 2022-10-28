@@ -1,13 +1,11 @@
 precision highp float;
 
-float map(float value, float min1, float max1, float min2, float max2) {
-  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+float random (vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123);
 }
 
-float random (vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
+float map(float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
 }
 
 // perlin noise
@@ -100,21 +98,17 @@ vec3 getPerlinTurbulence( vec2 position, float scale, float strength, float time
 }
 // fin perlin noise
 
-uniform vec2 uResolution;
 uniform float uTime;
 uniform float uLevel;
 uniform sampler2D uTexture;
 
 uniform float uBass;
-uniform float uLowMid;
 uniform float uMid;
-uniform float uHighMid;
-uniform float uTreble;
 
 varying vec2 vTexCoord;
 
 float circle(vec2 _st, float _radius, float _smoothness){
-    vec2 dist = _st-vec2(0.5);
+  vec2 dist = _st-vec2(0.5);
 	return smoothstep(_radius-(_radius*_smoothness),
                          _radius+(_radius*_smoothness),
                          dot(dist,dist)*4.0);
@@ -125,13 +119,11 @@ void main () {
 
   vec3 color = vec3(1.);
 
-  // float lineWidth = 0.01;
-
   float grainNoise = pnoise(vec3(random(coord + uTime), 1., 1.));
   float positionNoise = pnoise(vec3(random(coord), uTime / 20., 1.));
 
-  float colorCircle1 = circle(coord - vec2(0.5, 0.5 + positionNoise), 1., 2.);
-  float colorCircle2 = circle(coord - vec2(-0.5 - positionNoise, positionNoise), 1., 2.);
+  float grainCircle1 = circle(coord - vec2(0.5, 0.5 + positionNoise), 1., 2.);
+  float grainCircle2 = circle(coord - vec2(-0.5 - positionNoise, positionNoise), 1., 2.);
 
   if (uMid > 15.) {
     coord.x *= sin(coord.x * uLevel * 0.2) * 10. + 0.6;
@@ -141,33 +133,16 @@ void main () {
     coord.y *= sin(coord.y * uLevel * 0.4) * 2. + 0.4;
   }
 
-  // color *= color.x;
+  vec4 grid = texture2D(uTexture, coord);
+  vec4 grid2 = texture2D(uTexture, coord + 0.005);
 
-  vec4 data = texture2D(uTexture, coord);
-  vec4 data2 = texture2D(uTexture, coord + 0.005);
-
-
-  color = data.xyz;
-  color += data2.xyz;
+  color = grid.xyz;
+  color += grid2.xyz;
 
   color += vec3(30./255.);
 
-// r0.4 g0.25 b0.25
-  // color.r += (1. - colorCircle1 - grainNoise) * 0.4;
-  // color.g += (1. - colorCircle1 - grainNoise) * 0.25;
-  color += (1. - colorCircle1 - grainNoise) * 0.05;
-
-// r0.3 g0.3 b0.2
-  // color.r += (1. - colorCircle2 - grainNoise) * 0.3;
-  // color.g += (1. - colorCircle2 - grainNoise) * 0.3;
-  color += (1. - colorCircle2 - grainNoise) * 0.1;
-
-
-  // float mask = step(0.1, coord.y);
-  // float mask2 = step(0.1 + lineWidth, coord.y);
-  // color *= mask - mask2;
-
+  color += (1. - grainCircle1 - grainNoise) * 0.05;
+  color += (1. - grainCircle2 - grainNoise) * 0.1;
 
   gl_FragColor = vec4(color, 1.);
-  // gl_FragColor = color;
 }

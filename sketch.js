@@ -10,13 +10,7 @@ let tr = 2
 
 let sound
 let fft
-let peakDetect
 let amplitude
-
-let beat = false
-let beatValue = 0
-
-let classActive = false
 
 let grid
 let offset = 0
@@ -25,7 +19,7 @@ const sketch = (sketch) => {
   sketch.preload = () => {
     // on charge le son
     sketch.soundFormats("mp3", "ogg")
-    sound = sketch.loadSound("sounds/polahq.mp3")
+    sound = sketch.loadSound("sounds/pola.mp3")
 
     // on charge les shaders
     for (const element of shaders) {
@@ -53,7 +47,6 @@ const sketch = (sketch) => {
 
     // on setup l'analyse du son
     fft = new p5.FFT()
-    peakDetect = new p5.PeakDetect()
     amplitude = new p5.Amplitude()
 
     grid = sketch.createImage(
@@ -68,8 +61,6 @@ const sketch = (sketch) => {
     target.setUniform("uResolution", resolution)
     target.setUniform("uTime", time + 1)
     target.setUniform("uTempo", tempo)
-    target.setUniform("uBeat", beat)
-    target.setUniform("uRandom", Math.random())
     target.setUniform("uBlue", blue)
     target.setUniform("uLevel", amplitude.getLevel())
     target.setUniform("uTreble", fft.getEnergy("treble"))
@@ -112,7 +103,6 @@ const sketch = (sketch) => {
     const ready = shaders.filter((el) => !el.loaded).length === 0
 
     sketch.fill("#000")
-    sketch.background("#000")
     sketch.rect(-width / 2, -height / 2, width, height)
 
     if (ready) {
@@ -133,9 +123,6 @@ const sketch = (sketch) => {
       shaders
         .find((el) => el.frag === "grid")
         .program.setUniform("uTexture", grid)
-
-
-      peakDetect.update(fft)
 
       if (sound.isPlaying()) {
         time += 0.1
